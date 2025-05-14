@@ -18,10 +18,26 @@ fun ResultScreen(navController: NavController) {
     val prefs = remember { UserPreferences(context) }
     val scope = rememberCoroutineScope()
 
+    var playerName by remember { mutableStateOf("") }
+    var currentScore by remember { mutableStateOf(0) }
     var bestScore by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
-        bestScore = prefs.getBestScore().first()
+        prefs.getPlayerName().collect {
+            playerName = it ?: "Jugador"
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        prefs.getCurrentScore().collect {
+            currentScore = it
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        prefs.getBestScore().collect {
+            bestScore = it
+        }
     }
 
     Column(
@@ -31,11 +47,12 @@ fun ResultScreen(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Juego Finalizado", style = MaterialTheme.typography.headlineMedium)
-
+        Text("¡Juego Finalizado!", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Tu mejor puntaje es: $bestScore", style = MaterialTheme.typography.bodyLarge)
+        Text("Jugador: $playerName", style = MaterialTheme.typography.bodyLarge)
+        Text("Tu puntaje fue: $currentScore", style = MaterialTheme.typography.bodyLarge)
+        Text("Mejor puntaje: $bestScore", style = MaterialTheme.typography.bodyLarge)
 
         Spacer(modifier = Modifier.height(24.dp))
 
