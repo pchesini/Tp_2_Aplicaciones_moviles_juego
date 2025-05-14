@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.tp_2_juego.ui.screens.StartScreen
 import com.example.tp_2_juego.ui.screens.GameScreen
+import com.example.tp_2_juego.ui.screens.ResultScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -27,6 +28,9 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("game") {
                         GameScreen(navController)
+                    }
+                    composable("result") {
+                        ResultScreen(navController)
                     }
                 }
             }
