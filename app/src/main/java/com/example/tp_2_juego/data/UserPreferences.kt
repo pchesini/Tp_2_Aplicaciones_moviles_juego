@@ -16,6 +16,7 @@ class UserPreferences(private val context: Context) {
     companion object {
         val PLAYER_NAME = stringPreferencesKey("player_name")
         val BEST_SCORE = intPreferencesKey("best_score")
+        val CURRENT_SCORE = intPreferencesKey("current_score") // ✅ AÑADIDO
     }
 
     suspend fun savePlayerName(name: String) {
@@ -36,5 +37,16 @@ class UserPreferences(private val context: Context) {
 
     fun getBestScore(): Flow<Int> {
         return context.dataStore.data.map { it[BEST_SCORE] ?: 0 }
+    }
+
+
+    suspend fun saveCurrentScore(score: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[CURRENT_SCORE] = score
+        }
+    }
+
+    fun getCurrentScore(): Flow<Int> {
+        return context.dataStore.data.map { it[CURRENT_SCORE] ?: 0 }
     }
 }

@@ -63,19 +63,29 @@ fun GameScreen(navController: NavController) {
             if (guess == currentNumber) {
                 score += 10
                 errorCount = 0
+
                 if (score > bestScore) {
                     bestScore = score
                     scope.launch {
                         prefs.saveBestScore(bestScore)
                     }
                 }
-                Toast.makeText(context, "¡Correcto!", Toast.LENGTH_SHORT).show()
+
+                scope.launch {
+                    prefs.saveCurrentScore(score)
+                    navController.navigate("result")
+                }
             } else {
                 errorCount++
                 if (errorCount >= 5) {
                     Toast.makeText(context, "Perdiste. Puntaje reiniciado.", Toast.LENGTH_SHORT).show()
                     score = 0
                     errorCount = 0
+
+                    scope.launch {
+                        prefs.saveCurrentScore(score)
+                        navController.navigate("result")
+                    }
                 } else {
                     Toast.makeText(context, "Incorrecto. Intentos fallidos: $errorCount", Toast.LENGTH_SHORT).show()
                 }
