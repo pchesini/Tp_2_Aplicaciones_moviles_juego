@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.tp_2_juego.ui.screens.StartScreen
+import com.example.tp_2_juego.ui.screens.GameScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -23,6 +24,9 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = "start") {
                     composable("start") {
                         StartScreen(navController)
+                    }
+                    composable("game") {
+                        GameScreen(navController)
                     }
                 }
             }
