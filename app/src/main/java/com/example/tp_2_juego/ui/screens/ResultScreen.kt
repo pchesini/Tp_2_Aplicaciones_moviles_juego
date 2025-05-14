@@ -63,5 +63,13 @@ fun ResultScreen(navController: NavController) {
         }) {
             Text("Volver a Jugar")
         }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = {
+            navController.navigate("ranking")
+        }) {
+            Text("Ver Ranking")
+        }
+
     }
 }

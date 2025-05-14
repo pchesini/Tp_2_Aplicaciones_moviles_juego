@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.tp_2_juego.data.UserPreferences
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import kotlin.random.Random
 
 @Composable
@@ -72,9 +73,12 @@ fun GameScreen(navController: NavController) {
                 }
 
                 scope.launch {
+                    val playerName = prefs.getPlayerName().first() ?: "Jugador"
                     prefs.saveCurrentScore(score)
+                    prefs.saveRankingScore(playerName, score)
                     navController.navigate("result")
                 }
+
             } else {
                 errorCount++
                 if (errorCount >= 5) {
@@ -83,7 +87,9 @@ fun GameScreen(navController: NavController) {
                     errorCount = 0
 
                     scope.launch {
+                        val playerName = prefs.getPlayerName().first() ?: "Jugador"
                         prefs.saveCurrentScore(score)
+                        prefs.saveRankingScore(playerName, score)
                         navController.navigate("result")
                     }
                 } else {

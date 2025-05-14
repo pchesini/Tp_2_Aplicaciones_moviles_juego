@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.tp_2_juego.ui.screens.StartScreen
 import com.example.tp_2_juego.ui.screens.GameScreen
+import com.example.tp_2_juego.ui.screens.RankingScreen
 import com.example.tp_2_juego.ui.screens.ResultScreen
 
 
@@ -32,6 +33,10 @@ class MainActivity : ComponentActivity() {
                     composable("result") {
                         ResultScreen(navController)
                     }
+                    composable("ranking") {
+                        RankingScreen(navController)
+                    }
+
                 }
             }
         }
