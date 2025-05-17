@@ -44,6 +44,6 @@ La información se guarda localmente, sin necesidad de conexión a Internet.
 - **ResultScreen**: Muestra el resultado de la ronda y permite volver a jugar.
 - **RankingScreen**: Lista de los jugadores con mayor puntaje acumulado.
 
-##  Cómo correr la app
+
 
 
