@@ -2,7 +2,6 @@ package com.example.tp_2_juego.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
@@ -16,17 +15,15 @@ class UserPreferences(private val context: Context) {
 
     companion object {
         val PLAYER_NAME = stringPreferencesKey("player_name")
-        val BEST_SCORE = intPreferencesKey("best_score")
-        val CURRENT_SCORE = intPreferencesKey("current_score")
         val RANKING = stringPreferencesKey("ranking")
-
-        // TypeToken para deserializar Map<String, Int>
-        val RANKING_TYPE = object : TypeToken<Map<String, Int>>() {}.type
+        val BEST_SCORES = stringPreferencesKey("best_scores")
+        val TOTAL_SCORES = stringPreferencesKey("total_scores")
+        val CURRENT_SCORES = stringPreferencesKey("current_scores")
     }
 
     private val gson = Gson()
+    private val mapType = object : TypeToken<Map<String, Int>>() {}.type
 
-    // Guardar nombre del jugador actual
     suspend fun savePlayerName(name: String) {
         context.dataStore.edit { prefs ->
             prefs[PLAYER_NAME] = name
@@ -37,50 +34,60 @@ class UserPreferences(private val context: Context) {
         return context.dataStore.data.map { it[PLAYER_NAME] }
     }
 
-    // Puntaje actual
-    suspend fun saveCurrentScore(score: Int) {
+    // ✅ Lógica corregida: siempre se actualiza el ranking
+    suspend fun saveScoreForPlayer(playerName: String, roundScore: Int, isWin: Boolean) {
         context.dataStore.edit { prefs ->
-            prefs[CURRENT_SCORE] = score
-        }
-    }
+            val totalMap = gson.fromJson<Map<String, Int>>(prefs[TOTAL_SCORES] ?: "{}", mapType).toMutableMap()
+            val bestMap = gson.fromJson<Map<String, Int>>(prefs[BEST_SCORES] ?: "{}", mapType).toMutableMap()
+            val currentMap = gson.fromJson<Map<String, Int>>(prefs[CURRENT_SCORES] ?: "{}", mapType).toMutableMap()
+            val rankingMap = gson.fromJson<Map<String, Int>>(prefs[RANKING] ?: "{}", mapType).toMutableMap()
 
-    fun getCurrentScore(): Flow<Int> {
-        return context.dataStore.data.map { it[CURRENT_SCORE] ?: 0 }
-    }
+            val totalAnterior = totalMap[playerName] ?: 0
+            val nuevoTotal = if (isWin) totalAnterior + roundScore else 0
 
-    // Mejor puntaje individual
-    suspend fun saveBestScore(score: Int) {
-        context.dataStore.edit { prefs ->
-            prefs[BEST_SCORE] = score
-        }
-    }
+            totalMap[playerName] = nuevoTotal
+            currentMap[playerName] = roundScore
 
-    fun getBestScore(): Flow<Int> {
-        return context.dataStore.data.map { it[BEST_SCORE] ?: 0 }
-    }
-
-    // Guardar ranking general
-    suspend fun saveRankingScore(playerName: String, score: Int) {
-        context.dataStore.edit { prefs ->
-            val currentJson = prefs[RANKING] ?: "{}"
-            val currentRanking: MutableMap<String, Int> =
-                gson.fromJson(currentJson, RANKING_TYPE) ?: mutableMapOf()
-
-            // Actualiza solo si el nuevo score es mejor
-            val existingScore = currentRanking[playerName] ?: 0
-            if (score > existingScore) {
-                currentRanking[playerName] = score
+            // Si superó el mejor puntaje anterior
+            if ((bestMap[playerName] ?: 0) < roundScore) {
+                bestMap[playerName] = roundScore
             }
 
-            prefs[RANKING] = gson.toJson(currentRanking)
+            // ✅ Siempre se actualiza el ranking, incluso si es 0
+            rankingMap[playerName] = nuevoTotal
+
+            prefs[TOTAL_SCORES] = gson.toJson(totalMap)
+            prefs[CURRENT_SCORES] = gson.toJson(currentMap)
+            prefs[BEST_SCORES] = gson.toJson(bestMap)
+            prefs[RANKING] = gson.toJson(rankingMap)
         }
     }
 
-    // Obtener ranking como Flow
+    fun getTotalScore(playerName: String): Flow<Int> {
+        return context.dataStore.data.map {
+            val map = gson.fromJson<Map<String, Int>>(it[TOTAL_SCORES] ?: "{}", mapType)
+            map[playerName] ?: 0
+        }
+    }
+
+    fun getBestScore(playerName: String): Flow<Int> {
+        return context.dataStore.data.map {
+            val map = gson.fromJson<Map<String, Int>>(it[BEST_SCORES] ?: "{}", mapType)
+            map[playerName] ?: 0
+        }
+    }
+
+    fun getCurrentScore(playerName: String): Flow<Int> {
+        return context.dataStore.data.map {
+            val map = gson.fromJson<Map<String, Int>>(it[CURRENT_SCORES] ?: "{}", mapType)
+            map[playerName] ?: 0
+        }
+    }
+
     fun getRanking(): Flow<Map<String, Int>> {
-        return context.dataStore.data.map { prefs ->
-            val json = prefs[RANKING] ?: "{}"
-            gson.fromJson(json, RANKING_TYPE)
+        return context.dataStore.data.map {
+            val json = it[RANKING] ?: "{}"
+            gson.fromJson(json, mapType)
         }
     }
 }

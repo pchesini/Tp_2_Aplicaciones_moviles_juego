@@ -10,8 +10,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.tp_2_juego.data.UserPreferences
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 @Composable
@@ -20,17 +20,22 @@ fun GameScreen(navController: NavController) {
     val prefs = remember { UserPreferences(context) }
     val scope = rememberCoroutineScope()
 
-    var currentNumber by remember { mutableStateOf(Random.nextInt(1, 6)) }
-    var input by remember { mutableStateOf("") }
+    var playerName by remember { mutableStateOf("Jugador") }
     var score by remember { mutableStateOf(0) }
     var bestScore by remember { mutableStateOf(0) }
+    var totalScore by remember { mutableStateOf(0) }
     var errorCount by remember { mutableStateOf(0) }
+    var input by remember { mutableStateOf("") }
+    var acertadoAlMenosUnaVez by remember { mutableStateOf(false) }
 
-    // Cargar mejor puntaje desde DataStore
+    var currentNumber by remember { mutableStateOf(0) }
+
+    // ✅ Solo se genera una vez al inicio del juego
     LaunchedEffect(Unit) {
-        prefs.getBestScore().collect {
-            bestScore = it
-        }
+        currentNumber = Random.nextInt(1, 6)
+        playerName = prefs.getPlayerName().first() ?: "Jugador"
+        prefs.getBestScore(playerName).collect { bestScore = it }
+        prefs.getTotalScore(playerName).collect { totalScore = it }
     }
 
     Column(
@@ -40,8 +45,10 @@ fun GameScreen(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Puntaje: $score", style = MaterialTheme.typography.headlineMedium)
+        Text("Jugador: $playerName", style = MaterialTheme.typography.headlineMedium)
+        Text("Puntaje ronda: $score", style = MaterialTheme.typography.headlineMedium)
         Text("Mejor Puntaje: $bestScore", style = MaterialTheme.typography.bodyLarge)
+        Text("Puntaje Total: $totalScore", style = MaterialTheme.typography.bodyMedium)
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -62,20 +69,23 @@ fun GameScreen(navController: NavController) {
             }
 
             if (guess == currentNumber) {
-                score += 10
-                errorCount = 0
-
-                if (score > bestScore) {
-                    bestScore = score
-                    scope.launch {
-                        prefs.saveBestScore(bestScore)
-                    }
+                val puntos = when (errorCount) {
+                    0 -> 10
+                    1 -> 8
+                    2 -> 6
+                    3 -> 4
+                    4 -> 2
+                    else -> 0
                 }
 
+                score += puntos
+                acertadoAlMenosUnaVez = true
+                errorCount = 0
+
+                if (score > bestScore) bestScore = score
+
                 scope.launch {
-                    val playerName = prefs.getPlayerName().first() ?: "Jugador"
-                    prefs.saveCurrentScore(score)
-                    prefs.saveRankingScore(playerName, score)
+                    prefs.saveScoreForPlayer(playerName, score, isWin = true)
                     navController.navigate("result")
                 }
 
@@ -87,20 +97,27 @@ fun GameScreen(navController: NavController) {
                     errorCount = 0
 
                     scope.launch {
-                        val playerName = prefs.getPlayerName().first() ?: "Jugador"
-                        prefs.saveCurrentScore(score)
-                        prefs.saveRankingScore(playerName, score)
+                        prefs.saveScoreForPlayer(playerName, score, isWin = acertadoAlMenosUnaVez)
                         navController.navigate("result")
                     }
+
+                    acertadoAlMenosUnaVez = false
                 } else {
                     Toast.makeText(context, "Incorrecto. Intentos fallidos: $errorCount", Toast.LENGTH_SHORT).show()
                 }
             }
 
-            currentNumber = Random.nextInt(1, 6)
             input = ""
         }) {
             Text("Adivinar")
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(onClick = {
+            navController.navigate("ranking")
+        }) {
+            Text("Ver Ranking")
         }
     }
 }

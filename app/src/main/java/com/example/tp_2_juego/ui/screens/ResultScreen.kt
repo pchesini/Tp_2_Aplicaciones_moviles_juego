@@ -16,28 +16,17 @@ import kotlinx.coroutines.launch
 fun ResultScreen(navController: NavController) {
     val context = LocalContext.current
     val prefs = remember { UserPreferences(context) }
-    val scope = rememberCoroutineScope()
 
-    var playerName by remember { mutableStateOf("") }
-    var currentScore by remember { mutableStateOf(0) }
+    var playerName by remember { mutableStateOf("Jugador") }
     var bestScore by remember { mutableStateOf(0) }
+    var totalScore by remember { mutableStateOf(0) }
+    var roundScore by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
-        prefs.getPlayerName().collect {
-            playerName = it ?: "Jugador"
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        prefs.getCurrentScore().collect {
-            currentScore = it
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        prefs.getBestScore().collect {
-            bestScore = it
-        }
+        playerName = prefs.getPlayerName().first() ?: "Jugador"
+        bestScore = prefs.getBestScore(playerName).first()
+        totalScore = prefs.getTotalScore(playerName).first()
+        roundScore = prefs.getCurrentScore(playerName).first()
     }
 
     Column(
@@ -47,14 +36,15 @@ fun ResultScreen(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("¡Juego Finalizado!", style = MaterialTheme.typography.headlineMedium)
+        Text("Resultado", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
 
         Text("Jugador: $playerName", style = MaterialTheme.typography.bodyLarge)
-        Text("Tu puntaje fue: $currentScore", style = MaterialTheme.typography.bodyLarge)
-        Text("Mejor puntaje: $bestScore", style = MaterialTheme.typography.bodyLarge)
+        Text("Puntaje de la Ronda: $roundScore", style = MaterialTheme.typography.bodyLarge)
+        Text("Mejor Puntaje: $bestScore", style = MaterialTheme.typography.bodyLarge)
+        Text("Puntaje Total: $totalScore", style = MaterialTheme.typography.bodyLarge)
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Button(onClick = {
             navController.navigate("start") {
@@ -63,6 +53,7 @@ fun ResultScreen(navController: NavController) {
         }) {
             Text("Volver a Jugar")
         }
+
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
@@ -70,6 +61,5 @@ fun ResultScreen(navController: NavController) {
         }) {
             Text("Ver Ranking")
         }
-
     }
 }
